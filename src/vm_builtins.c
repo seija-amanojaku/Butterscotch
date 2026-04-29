@@ -271,6 +271,7 @@ static const BuiltinVarEntry BUILTIN_VAR_TABLE[] = {
     { "room_persistent", BUILTIN_VAR_ROOM_PERSISTENT },
     { "room_speed", BUILTIN_VAR_ROOM_SPEED },
     { "room_width", BUILTIN_VAR_ROOM_WIDTH },
+    { "score", BUILTIN_VAR_SCORE },
     { "solid", BUILTIN_VAR_SOLID },
     { "speed", BUILTIN_VAR_SPEED },
     { "sprite_height", BUILTIN_VAR_SPRITE_HEIGHT },
@@ -842,11 +843,14 @@ RValue VMBuiltins_getVariable(VMContext* ctx, int16_t builtinVarId, const char* 
         case BUILTIN_VAR_GP_AXIS_RV:
             return RValue_makeReal(GP_AXIS_RV);
 
+
         case BUILTIN_VAR_FPS:
             return RValue_makeReal(ctx->dataWin->gen8.gms2FPS);
         case BUILTIN_VAR_DEBUG_MODE:
             return RValue_makeBool(false);
 
+        case BUILTIN_VAR_SCORE:
+            return RValue_makeReal(runner->score);
         default:
             break;
     }
@@ -1180,6 +1184,11 @@ void VMBuiltins_setVariable(VMContext* ctx, int16_t builtinVarId, const char* na
         case BUILTIN_VAR_ROOM_FIRST:
         case BUILTIN_VAR_GP_FACE1 ... BUILTIN_VAR_GP_AXIS_RV:
             fprintf(stderr, "VM: Warning - attempted write to read-only built-in '%s'\n", name);
+            return;
+
+        // Other
+        case BUILTIN_VAR_SCORE:
+            runner->score = RValue_toReal(val);
             return;
 
         // argument[N] - array-style write to script arguments

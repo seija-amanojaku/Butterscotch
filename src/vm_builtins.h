@@ -204,6 +204,7 @@ typedef enum {
     // Other
     BUILTIN_VAR_FPS,
     BUILTIN_VAR_DEBUG_MODE,
+    BUILTIN_VAR_SCORE,
 
     // Gamepad constants
     BUILTIN_VAR_GP_FACE1,

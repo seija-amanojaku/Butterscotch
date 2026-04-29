@@ -2797,8 +2797,13 @@ static RValue executeLoop(VMContext* ctx) {
 #endif
                 // Globals are always non-builtin (varID >= 0); inline the read straight from globalVars[].
                 Variable* varDef = resolveVarDef(ctx, varRef);
-                require(ctx->globalVarCount > (uint32_t) varDef->varID);
-                RValue val = ctx->globalVars[varDef->varID];
+                require((ctx->globalVarCount > (uint32_t) varDef->varID) || -6 == varDef->varID);
+                RValue val;
+                if (-6 == varDef->varID) {
+                    val = resolveVariableRead(ctx, INSTANCE_BUILTIN, varRef);
+                } else {
+                    val = ctx->globalVars[varDef->varID];
+                }
                 val.ownsReference = false;
                 stackPushTyped(ctx, val, GML_TYPE_VARIABLE);
                 break;

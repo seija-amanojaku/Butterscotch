@@ -2113,6 +2113,39 @@ static RValue builtinMatrixBuildProjectionOrtho(MAYBE_UNUSED VMContext *ctx, RVa
     }
 }
 
+static RValue builtinMatrixBuildProjectionPerspectiveFOV(MAYBE_UNUSED VMContext *ctx, RValue *args, int32_t argCount) {
+    if (argCount < 4 || argCount > 5) return RValue_makeUndefined();
+    GMLReal fov = RValue_toReal(args[0]) * (M_PI / 180.0);
+    GMLReal aspect = RValue_toReal(args[1]);
+    GMLReal znear = RValue_toReal(args[2]);
+    GMLReal zfar = RValue_toReal(args[3]);
+
+    bool toPrevMatrix = argCount == 5;
+    GMLArray *destArray = toPrevMatrix ? args[4].array : nullptr;
+    if (toPrevMatrix && !rvalueIsMatrix(args[4])) return RValue_makeUndefined();
+
+    GMLReal scaleY = 1. / GMLReal_tan(fov / 2.);
+    GMLReal scaleX = scaleY / aspect;
+
+    Matrix4f mat;
+    memset(mat.m, 0, sizeof(mat.m));
+
+    mat.m[Matrix_getIndex(0, 0)] = scaleX;
+    mat.m[Matrix_getIndex(1, 1)] = scaleY;
+    mat.m[Matrix_getIndex(2, 2)] = zfar / (zfar - znear);
+    mat.m[Matrix_getIndex(2, 3)] = -(zfar * znear) / (zfar - znear);
+    mat.m[Matrix_getIndex(3, 2)] = 1.;
+
+    if (!toPrevMatrix) {
+        return RValue_makeArray(matrixToGml(&mat));
+    } else {
+        repeat (16, i) {
+            *GMLArray_slot(destArray, i) = RValue_makeReal(mat.m[i]);
+        }
+        return RValue_makeArrayWeak(destArray);
+    }
+}
+
 static RValue builtinMatrixBuildLookat(MAYBE_UNUSED VMContext *ctx, RValue *args, int32_t argCount) {
     if (argCount < 9 || argCount > 10) return RValue_makeUndefined();
     
@@ -9145,6 +9178,7 @@ void VMBuiltins_registerAll(VMContext* ctx) {
     VM_registerBuiltin(ctx, "matrix_multiply", builtinMatrixMultiply);
     VM_registerBuiltin(ctx, "matrix_build_lookat", builtinMatrixBuildLookat);
     VM_registerBuiltin(ctx, "matrix_build_projection_ortho", builtinMatrixBuildProjectionOrtho);
+    VM_registerBuiltin(ctx, "matrix_build_projection_perspective_fov", builtinMatrixBuildProjectionPerspectiveFOV);
 
     // Random
     VM_registerBuiltin(ctx, "random", builtinRandom);

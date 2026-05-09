@@ -1534,6 +1534,11 @@ static void gsDrawRectangle(Renderer* renderer, float x1, float y1, float x2, fl
     }
 }
 
+static void gsDrawRectangleColor(Renderer* renderer, float x1, float y1, float x2, float y2, uint32_t c1, uint32_t c2, uint32_t c3, uint32_t c4, float alpha, bool outline) {
+    // TODO: Need to use gouraud triangles to draw the quad
+    gsDrawRectangle(renderer, x1, y1, x2, y2, c1, alpha, outline);
+}
+
 static void gsDrawLine(Renderer* renderer, float x1, float y1, float x2, float y2, MAYBE_UNUSED float width, uint32_t color, float alpha) {
     GsRenderer* gs = (GsRenderer*) renderer;
 
@@ -2130,6 +2135,7 @@ static RendererVtable gsVtable = {
     .drawSpritePos = gsDrawSpritePos,
     .drawSpritePart = gsDrawSpritePart,
     .drawRectangle = gsDrawRectangle,
+    .drawRectangleColor = gsDrawRectangleColor,
     .drawLine = gsDrawLine,
     .drawLineColor = gsDrawLineColor,
     .drawText = gsDrawText,

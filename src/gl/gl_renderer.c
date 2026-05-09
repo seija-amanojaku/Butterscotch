@@ -613,8 +613,16 @@ static void glDrawSpritePos(Renderer* renderer, int32_t tpagIndex, float x1, flo
     emitTexturedQuad(gl, texId, x1, y1, x2, y2, x3, y3, x4, y4, u0, v0, u1, v1, 1.0f, 1.0f, 1.0f, alpha);
 }
 
-// Emits a single colored quad into the batch using the white pixel texture
-static void emitColoredQuad(GLRenderer* gl, float x0, float y0, float x1, float y1, float r, float g, float b, float a) {
+static void emitMultiColoredQuad(
+    GLRenderer* gl, 
+    float x0, float y0, 
+    float x1, float y1, 
+    float r1, float g1, float b1, 
+    float r2, float g2, float b2, 
+    float r3, float g3, float b3, 
+    float r4, float g4, float b4, 
+    float a
+) {
     // Flush if texture changed or batch full
     if (gl->quadCount > 0 && gl->currentTextureId != gl->whiteTexture) flushBatch(gl);
     if (gl->quadCount >= MAX_QUADS) flushBatch(gl);
@@ -626,21 +634,34 @@ static void emitColoredQuad(GLRenderer* gl, float x0, float y0, float x1, float 
     // All UVs point to (0.5, 0.5) center of the 1x1 white texture
     // Vertex 0: top-left
     verts[0] = x0; verts[1] = y0; verts[2] = 0.5f; verts[3] = 0.5f;
-    verts[4] = r;  verts[5] = g;  verts[6] = b;    verts[7] = a;
+    verts[4] = r1;  verts[5] = g1;  verts[6] = b1;    verts[7] = a;
 
     // Vertex 1: top-right
     verts[8]  = x1; verts[9]  = y0; verts[10] = 0.5f; verts[11] = 0.5f;
-    verts[12] = r;  verts[13] = g;  verts[14] = b;    verts[15] = a;
+    verts[12] = r2;  verts[13] = g2;  verts[14] = b2;    verts[15] = a;
 
     // Vertex 2: bottom-right
     verts[16] = x1; verts[17] = y1; verts[18] = 0.5f; verts[19] = 0.5f;
-    verts[20] = r;  verts[21] = g;  verts[22] = b;    verts[23] = a;
+    verts[20] = r3;  verts[21] = g3;  verts[22] = b3;    verts[23] = a;
 
     // Vertex 3: bottom-left
     verts[24] = x0; verts[25] = y1; verts[26] = 0.5f; verts[27] = 0.5f;
-    verts[28] = r;  verts[29] = g;  verts[30] = b;    verts[31] = a;
+    verts[28] = r4;  verts[29] = g4;  verts[30] = b4;    verts[31] = a;
 
     gl->quadCount++;
+}
+
+// Emits a single colored quad into the batch using the white pixel texture
+static void emitColoredQuad(GLRenderer* gl, float x0, float y0, float x1, float y1, float r, float g, float b, float a) {
+   emitMultiColoredQuad(gl, 
+        x0, y1, 
+        x1, y1, 
+        r, g, b, 
+        r, g, b, 
+        r, g, b, 
+        r, g, b, 
+        a
+    );
 }
 
 static void glDrawRectangle(Renderer* renderer, float x1, float y1, float x2, float y2, uint32_t color, float alpha, bool outline) {
@@ -659,6 +680,83 @@ static void glDrawRectangle(Renderer* renderer, float x1, float y1, float x2, fl
     } else {
         // Filled rectangle: GML adds +1 to width/height for filled rects
         emitColoredQuad(gl, x1, y1, x2 + 1, y2 + 1, r, g, b, alpha);
+    }
+}
+
+static void glDrawRectangleColor(
+    Renderer* renderer, float x1, float y1, float x2, float y2, uint32_t c1, uint32_t c2, uint32_t c3, uint32_t c4, float alpha, bool outline) {
+    GLRenderer* gl = (GLRenderer*) renderer;
+
+    float r1 = (float) BGR_R(c1) / 255.0f;
+    float g1 = (float) BGR_G(c1) / 255.0f;
+    float b1 = (float) BGR_B(c1) / 255.0f;
+
+    float r2 = (float) BGR_R(c2) / 255.0f;
+    float g2 = (float) BGR_G(c2) / 255.0f;
+    float b2 = (float) BGR_B(c2) / 255.0f;
+
+    float r3 = (float) BGR_R(c3) / 255.0f;
+    float g3 = (float) BGR_G(c3) / 255.0f;
+    float b3 = (float) BGR_B(c3) / 255.0f;
+
+    float r4 = (float) BGR_R(c4) / 255.0f;
+    float g4 = (float) BGR_G(c4) / 255.0f;
+    float b4 = (float) BGR_B(c4) / 255.0f;
+
+    if (outline) {
+        // Draw 4 one-pixel-wide edges: top, bottom, left, right
+        emitMultiColoredQuad(
+            gl, 
+            x1, y1, 
+            x2 + 1, y1 + 1, 
+            r1, g1, b1, 
+            r2, g2, b2, 
+            r3, g3, b3, 
+            r4, g4, b4, 
+            alpha
+        ); // top
+        emitMultiColoredQuad(
+            gl, 
+            x1, y2, 
+            x2 + 1, y2 + 1, 
+            r1, g1, b1, 
+            r2, g2, b2, 
+            r3, g3, b3, 
+            r4, g4, b4, 
+            alpha
+        ); // bottom
+        emitMultiColoredQuad(
+            gl,
+            x1, y1 + 1, 
+            x1 + 1, y2, 
+            r1, g1, b1, 
+            r2, g2, b2, 
+            r3, g3, b3, 
+            r4, g4, b4, 
+            alpha
+        ); // left
+        emitMultiColoredQuad(
+            gl, 
+            x2, y1 + 1,
+            x2 + 1, y2, 
+            r1, g1, b1, 
+            r2, g2, b2, 
+            r3, g3, b3, 
+            r4, g4, b4, 
+            alpha
+        ); // right
+    } else {
+        // Filled rectangle: GML adds +1 to width/height for filled rects
+        emitMultiColoredQuad(
+            gl, 
+            x1, y1, 
+            x2 + 1, y2 + 1, 
+            r1, g1, b1, 
+            r2, g2, b2, 
+            r3, g3, b3, 
+            r4, g4, b4,
+            alpha
+        );
     }
 }
 
@@ -2080,6 +2178,7 @@ static RendererVtable glVtable = {
     .drawSpritePos = glDrawSpritePos,
     .drawSpritePart = glDrawSpritePart,
     .drawRectangle = glDrawRectangle,
+    .drawRectangleColor = glDrawRectangleColor,
     .drawLine = glDrawLine,
     .drawLineColor = glDrawLineColor,
     .drawTriangle = glDrawTriangle,

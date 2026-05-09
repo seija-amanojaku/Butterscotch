@@ -2100,8 +2100,13 @@ static RValue builtinMatrixBuildProjectionOrtho(MAYBE_UNUSED VMContext *ctx, RVa
 
     Matrix4f mat;
 
-    // I2 x Ortho(...) = Ortho(...), duh
-    Matrix4f_ortho(Matrix4f_identity(&mat), 0.0f, width, 0.0f, height, znear, zfar);
+    memset(mat.m, 0, sizeof(mat.m));
+    mat.m[Matrix_getIndex(0,0)] = 2.0f / width;
+    mat.m[Matrix_getIndex(1,1)] = 2.0f / height;
+    mat.m[Matrix_getIndex(2,2)] = 1.0f / (zfar - znear);
+    mat.m[Matrix_getIndex(3,3)] = 1.0f;
+
+    mat.m[Matrix_getIndex(2,3)] = znear / (znear - zfar);
 
     if (!toPrevMatrix) {
         return RValue_makeArray(matrixToGml(&mat));

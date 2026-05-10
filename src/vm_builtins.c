@@ -2087,7 +2087,6 @@ static RValue builtinMatrixMultiply(MAYBE_UNUSED VMContext *ctx, RValue *args, i
     }
 }
 
-<<<<<<< HEAD
 static RValue builtinMatrixBuildProjectionOrtho(MAYBE_UNUSED VMContext *ctx, RValue *args, int32_t argCount) {
     if (argCount < 4 || argCount > 5) return RValue_makeUndefined();
     GMLReal width = RValue_toReal(args[0]);
@@ -2234,9 +2233,6 @@ static RValue builtinMatrixBuildLookat(MAYBE_UNUSED VMContext *ctx, RValue *args
         return RValue_makeArray(matrixToGml(&matrix));
     }
 }
-
-=======
->>>>>>> 432f98b (Start adding an handful of matrix related math)
 
 // ===[ RANDOM FUNCTIONS ]===
 

@@ -12,7 +12,7 @@ typedef float GMLReal;
 #define GMLReal_cos cosf
 #define GMLReal_tan tanf
 #define GMLReal_asin asinf
-#define GMLReal_atan atan
+#define GMLReal_atan atanf
 #define GMLReal_atan2 atan2f
 #define GMLReal_sqrt sqrtf
 #define GMLReal_fabs fabsf

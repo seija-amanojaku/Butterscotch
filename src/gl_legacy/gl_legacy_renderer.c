@@ -425,53 +425,32 @@ static void glDrawSpritePart(Renderer* renderer, int32_t tpagIndex, int32_t srcO
     glEnd();
 }
 
-static void emitMultiColoredQuad(
-    GLLegacyRenderer* gl, 
-    float x0, float y0, 
-    float x1, float y1, 
-    float r1, float g1, float b1,
-    float r2, float g2, float b2,
-    float r3, float g3, float b3,
-    float r4, float g4, float b4,
-    float a
-) {
+// Emits a single colored quad into the batch using the white pixel texture
+static void emitColoredQuad(GLLegacyRenderer* gl, float x0, float y0, float x1, float y1, float r, float g, float b, float a) {
     glBindTexture(GL_TEXTURE_2D, gl->whiteTexture);
 
     glBegin(GL_QUADS);
         // All UVs point to (0.5, 0.5) center of the 1x1 white texture
         // Vertex 0: top-left
-        glColor4f(r1, g1, b1, a);
+        glColor4f(r, g, b, a);
         glTexCoord2f(0.5f, 0.5f);
         glVertex2f(x0, y0);
 
         // Vertex 1: top-right
-        glColor4f(r2, g2, b2, a);
+        glColor4f(r, g, b, a);
         glTexCoord2f(0.5f, 0.5f);
         glVertex2f(x1, y0);
 
         // Vertex 2: bottom-right
-        glColor4f(r3, g3, b3, a);
+        glColor4f(r, g, b, a);
         glTexCoord2f(0.5f, 0.5f);
         glVertex2f(x1, y1);
 
         // Vertex 3: bottom-left
-        glColor4f(r4, g4, b4, a);
+        glColor4f(r, g, b, a);
         glTexCoord2f(0.5f, 0.5f);
         glVertex2f(x0, y1);
     glEnd();
-}
-
-// Emits a single colored quad into the batch using the white pixel texture
-static void emitColoredQuad(GLLegacyRenderer* gl, float x0, float y0, float x1, float y1, float r, float g, float b, float a) {
-   emitMultiColoredQuad(gl, 
-        x0, y1, 
-        x1, y1, 
-        r, g, b, 
-        r, g, b, 
-        r, g, b, 
-        r, g, b, 
-        a
-    );
 }
 
 static void glDrawRectangle(Renderer* renderer, float x1, float y1, float x2, float y2, uint32_t color, float alpha, bool outline) {
@@ -490,83 +469,6 @@ static void glDrawRectangle(Renderer* renderer, float x1, float y1, float x2, fl
     } else {
         // Filled rectangle: GML adds +1 to width/height for filled rects
         emitColoredQuad(gl, x1, y1, x2 + 1, y2 + 1, r, g, b, alpha);
-    }
-}
-
-static void glDrawRectangleColor(
-    Renderer* renderer, float x1, float y1, float x2, float y2, uint32_t c1, uint32_t c2, uint32_t c3, uint32_t c4, float alpha, bool outline) {
-    GLLegacyRenderer* gl = (GLLegacyRenderer*) renderer;
-
-    float r1 = (float) BGR_R(c1) / 255.0f;
-    float g1 = (float) BGR_G(c1) / 255.0f;
-    float b1 = (float) BGR_B(c1) / 255.0f;
-
-    float r2 = (float) BGR_R(c2) / 255.0f;
-    float g2 = (float) BGR_G(c2) / 255.0f;
-    float b2 = (float) BGR_B(c2) / 255.0f;
-
-    float r3 = (float) BGR_R(c3) / 255.0f;
-    float g3 = (float) BGR_G(c3) / 255.0f;
-    float b3 = (float) BGR_B(c3) / 255.0f;
-
-    float r4 = (float) BGR_R(c4) / 255.0f;
-    float g4 = (float) BGR_G(c4) / 255.0f;
-    float b4 = (float) BGR_B(c4) / 255.0f;
-
-    if (outline) {
-        // Draw 4 one-pixel-wide edges: top, bottom, left, right
-        emitMultiColoredQuad(
-            gl, 
-            x1, y1, 
-            x2 + 1, y1 + 1, 
-            r1, g1, b1, 
-            r2, g2, b2, 
-            r3, g3, b3, 
-            r4, g4, b4, 
-            alpha
-        ); // top
-        emitMultiColoredQuad(
-            gl, 
-            x1, y2, 
-            x2 + 1, y2 + 1, 
-            r1, g1, b1, 
-            r2, g2, b2, 
-            r3, g3, b3, 
-            r4, g4, b4, 
-            alpha
-        ); // bottom
-        emitMultiColoredQuad(
-            gl,
-            x1, y1 + 1, 
-            x1 + 1, y2, 
-            r1, g1, b1, 
-            r2, g2, b2, 
-            r3, g3, b3, 
-            r4, g4, b4, 
-            alpha
-        ); // left
-        emitMultiColoredQuad(
-            gl, 
-            x2, y1 + 1,
-            x2 + 1, y2, 
-            r1, g1, b1, 
-            r2, g2, b2, 
-            r3, g3, b3, 
-            r4, g4, b4, 
-            alpha
-        ); // right
-    } else {
-        // Filled rectangle: GML adds +1 to width/height for filled rects
-        emitMultiColoredQuad(
-            gl, 
-            x1, y1, 
-            x2 + 1, y2 + 1, 
-            r1, g1, b1, 
-            r2, g2, b2, 
-            r3, g3, b3, 
-            r4, g4, b4,
-            alpha
-        );
     }
 }
 
@@ -1345,7 +1247,6 @@ static RendererVtable glVtable = {
     .drawSpritePos = glDrawSpritePos,
     .drawSpritePart = glDrawSpritePart,
     .drawRectangle = glDrawRectangle,
-    .drawRectangleColor = glDrawRectangleColor,
     .drawLine = glDrawLine,
     .drawLineColor = glDrawLineColor,
     .drawTriangle = glDrawTriangle,
